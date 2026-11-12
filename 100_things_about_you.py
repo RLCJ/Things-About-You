@@ -13,8 +13,8 @@ import pygame
 # CONSTANTS
 # ----------------------------------------------------------------------------
 WIDTH, HEIGHT = 1200, 800
-FPS = 60
-TITLE = "100 THINGS ABOUT YOU"
+FPS = 120
+TITLE = "50 THINGS ABOUT YOU"
 
 # Palette
 BG_TOP = (8, 12, 26)            # midnight navy
@@ -551,9 +551,9 @@ class Dust:
             screen.blit(dot, (int(m.x), int(y)))
 
 
-# ----------------------------------------------------------------------------
-# THE SCENE
-# ----------------------------------------------------------------------------
+# -------------------------------------------------------------
+# Scenery
+# -------------------------------------------------------------
 class Scene:
     def __init__(self, screen):
         self.screen = screen
@@ -649,6 +649,22 @@ class Scene:
         for key in list(self.feature_cache):
             if key not in keep:
                 del self.feature_cache[key]
+
+    # jumps to next statement immediately
+    def next_feature(self):
+        if self.k < 0:
+            self.start_feature(0)
+        else:
+            self.start_feature(self.k + 1)
+        self.phase = 0.0     
+
+    # jumps to previous statement immediately
+    def prev_feature(self):
+        if self.k <= 0:
+            self.start_feature(0)
+        else:
+            self.start_feature(self.k - 1)
+        self.phase = 0.0
 
     # --- update ---------------------------------------------------------
     def update(self, dt):
@@ -829,11 +845,19 @@ def main():
     running = True
     while running:
         dt = min(clock.tick(FPS) / 1000.0, 0.05)     # delta time, clamped
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_q):
-                running = False
+            elif event.type == pygame.KEYDOWN:
+                key = getattr(event, "key", None)       # specify fallback for safety if None exists
+                if key in (pygame.K_ESCAPE, pygame.K_q):
+                    running = False
+                elif key == pygame.K_RIGHT:
+                    scene.next_feature()
+                elif key == pygame.K_LEFT:
+                    scene.prev_feature()
+                    
         scene.update(dt)
         scene.draw()
         pygame.display.flip()
